@@ -1,5 +1,6 @@
 import hashlib
 import os
+import json
 
 def hash_and_store(filepath: str) -> str:
     # read the file's bytes
@@ -20,7 +21,32 @@ def hash_and_store(filepath: str) -> str:
 
         return filehash
 
+def create_snapshot(filepaths: list[str]) -> dict:
+    snapshot = {}
+
+    # Store and hash each file 
+    for path in filepaths:
+        filehash = hash_and_store(path)
+        snapshot[path] = filehash
+
+    # turn dict -> JSON string -> bytes -> hash
+    snapshot_str = json.dumps(snapshot, sort_keys=True)
+    snapshot_bytes = snapshot_str.encode()
+    snapshot_hash = hashlib.sha256(snapshot_bytes).hexdigest()
+
+    # TODO: save `snapshot` dict as JSON somewhere in snapshots/
+
+    os.makedirs("snapshots", exist_ok=True)
+
+    with open(f"snapshots/{snapshot_hash}.json", "w") as f:
+        json.dump(snapshot, f)
+
+    # TODO: return something that identifies this snapshot
+    
+    return snapshot
+
+
 if __name__ == "__main__":
-    h = hash_and_store("testsave.txt")
-    print(h)
+    snap_id = create_snapshot(["testsave.txt"])
+    print(snap_id)
     
